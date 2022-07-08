@@ -585,6 +585,7 @@ int epoll_reactor::do_epoll_create()
   if (fd == -1 && (errno == EINVAL || errno == ENOSYS))
   {
     fd = epoll_create(epoll_size);
+    // linux系统调用的规则：0成功，-1失败
     if (fd != -1)
       // fcntl系统调用可以用来对已打开的文件描述符进行各种控制操作以改变已打开文件的的各种属性
       ::fcntl(fd, F_SETFD, FD_CLOEXEC);
