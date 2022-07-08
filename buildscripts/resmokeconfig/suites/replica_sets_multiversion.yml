@@ -1,0 +1,18 @@
+test_kind: js_test
+
+selector:
+  roots:
+  - jstests/replsets/*.js
+  exclude_with_any_tags:
+  - multiversion_incompatible
+  - requires_fcv_44
+  exclude_files:
+  - jstests/replsets/apply_prepare_txn_write_conflict_robustness.js
+executor:
+  config:
+    shell_options:
+      nodb: ''
+      readMode: commands
+      global_vars:
+        TestData:
+          useRandomBinVersionsWithinReplicaSet: true
