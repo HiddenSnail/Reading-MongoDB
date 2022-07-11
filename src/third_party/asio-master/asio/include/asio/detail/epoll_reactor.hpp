@@ -53,6 +53,7 @@ public:
     connect_op = 1, except_op = 2, max_ops = 3 };
 
   // Per-descriptor queues.
+  // Note: operation定义在asio/detail/scheduler_operation.hpp
   class descriptor_state : operation
   {
     friend class epoll_reactor;
@@ -63,9 +64,9 @@ public:
 
     mutex mutex_;
     epoll_reactor* reactor_;
-    int descriptor_;
+    int descriptor_; // 描述符
     uint32_t registered_events_;
-    op_queue<reactor_op> op_queue_[max_ops];
+    op_queue<reactor_op> op_queue_[max_ops]; // 操作函数队列
     bool try_speculative_[max_ops];
     bool shutdown_;
 

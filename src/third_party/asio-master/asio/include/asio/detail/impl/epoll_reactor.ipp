@@ -49,6 +49,7 @@ epoll_reactor::epoll_reactor(asio::execution_context& ctx)
   epoll_event ev = { 0, { 0 } };
   ev.events = EPOLLIN | EPOLLERR | EPOLLET;
   ev.data.ptr = &interrupter_;
+  // Note: epoll_ctl(epoll句柄，操作类型，监听的fd，监听的事件)
   epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, interrupter_.read_descriptor(), &ev);
   interrupter_.interrupt();
 
@@ -147,6 +148,8 @@ void epoll_reactor::init_task()
   scheduler_.init_task();
 }
 
+
+// Note: 注册event到epoll上
 int epoll_reactor::register_descriptor(socket_type descriptor,
     epoll_reactor::per_descriptor_data& descriptor_data)
 {
@@ -167,6 +170,14 @@ int epoll_reactor::register_descriptor(socket_type descriptor,
   }
 
   epoll_event ev = { 0, { 0 } };
+  // Note: 
+  // EPOLLIN: 表示对应的文件描述符可以读
+  // EPOLLOUT：表示对应的文件描述符可以写
+  // EPOLLERR：表示对应的文件描述符发生错误
+  // EPOLLHUP：表示对应的文件描述符被挂断
+  // EPOLLPRI：表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）
+  // EPOLLET: 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于水平触发(Level Triggered)来说的
+  // EPOLLONESHOT: 只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
   ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLPRI | EPOLLET;
   descriptor_data->registered_events_ = ev.events;
   ev.data.ptr = descriptor_data;
@@ -458,6 +469,7 @@ void epoll_reactor::run(long usec, op_queue<operation>& ops)
   else
   {
     timeout = (usec < 0) ? -1 : ((usec - 1) / 1000 + 1);
+    // 只有当timerfd不存在时，才通过下面方式获取timeout，最长为5min
     if (timer_fd_ == -1)
     {
       mutex::scoped_lock lock(mutex_);
@@ -467,6 +479,7 @@ void epoll_reactor::run(long usec, op_queue<operation>& ops)
 
   // Block on the epoll descriptor.
   epoll_event events[128];
+  // epoll_wait获取准备好的IO事件
   int num_events = epoll_wait(epoll_fd_, events, 128, timeout);
 
 #if defined(ASIO_ENABLE_HANDLER_TRACKING)
@@ -534,6 +547,7 @@ void epoll_reactor::run(long usec, op_queue<operation>& ops)
       // The descriptor operation doesn't count as work in and of itself, so we
       // don't call work_started() here. This still allows the scheduler to
       // stop if the only remaining operations are descriptor operations.
+      // Note: 定义在 asio/detail/epoll_reactor.hpp 中
       descriptor_state* descriptor_data = static_cast<descriptor_state*>(ptr);
       if (!ops.is_enqueued(descriptor_data))
       {
@@ -588,6 +602,7 @@ int epoll_reactor::do_epoll_create()
     // linux系统调用的规则：0成功，-1失败
     if (fd != -1)
       // fcntl系统调用可以用来对已打开的文件描述符进行各种控制操作以改变已打开文件的的各种属性
+      // 对文件描述符在进程执行方面做出某种限制
       ::fcntl(fd, F_SETFD, FD_CLOEXEC);
   }
 
@@ -601,6 +616,7 @@ int epoll_reactor::do_epoll_create()
   return fd;
 }
 
+// 创建定时器 
 int epoll_reactor::do_timerfd_create()
 {
 #if defined(ASIO_HAS_TIMERFD)
@@ -615,6 +631,8 @@ int epoll_reactor::do_timerfd_create()
   {
     fd = timerfd_create(CLOCK_MONOTONIC, 0);
     if (fd != -1)
+      // exec函数族的作用是根据指定的文件名找到可执行文件，并用它来取代调用进程的内容，换句话说，就是在调用进程内部执行一个可执行文件。
+      // 该函数表示，使用execl执行的程序里，此描述符被关闭，不能再使用它
       ::fcntl(fd, F_SETFD, FD_CLOEXEC);
   }
 
