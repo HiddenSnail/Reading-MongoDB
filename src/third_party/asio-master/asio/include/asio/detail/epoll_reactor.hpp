@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+// @Read
 
 #ifndef ASIO_DETAIL_EPOLL_REACTOR_HPP
 #define ASIO_DETAIL_EPOLL_REACTOR_HPP
@@ -100,6 +101,7 @@ public:
 
   // Register a socket with the reactor. Returns 0 on success, system error
   // code on failure.
+  // Note: 将socket注册到epoll上
   ASIO_DECL int register_descriptor(socket_type descriptor,
       per_descriptor_data& descriptor_data);
 

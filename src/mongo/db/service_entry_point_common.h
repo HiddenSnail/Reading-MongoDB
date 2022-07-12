@@ -26,6 +26,7 @@
  *    exception statement from all source files in the program, then also delete
  *    it in the license file.
  */
+ // @Read
 
 #pragma once
 
@@ -98,6 +99,7 @@ struct ServiceEntryPointCommon {
                                          BSONObjBuilder* metadataBob) const = 0;
     };
 
+    // Note：处理请求
     static DbResponse handleRequest(OperationContext* opCtx, const Message& m, const Hooks& hooks);
 
     /**

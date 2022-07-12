@@ -27,6 +27,9 @@
  *    it in the license file.
  */
 
+// @Read
+
+
 #pragma once
 
 #include <boost/optional.hpp>
@@ -63,6 +66,13 @@ namespace repl {
 class UnreplicatedWritesBlock;
 }  // namespace repl
 
+
+/** Note:
+ 1 每个Context都包含一个操作状态，直至操作结束
+ 2 任何时候一个客户端最多可以与一个OperationContext相关联
+ 3 每个Context都有一个RecoveryUnit关联
+ 4 Context还跟踪RecoveryUnit的状态
+ */
 /**
  * This class encompasses the state required by an operation and lives from the time a network
  * operation is dispatched until its execution is finished. Note that each "getmore" on a cursor
@@ -93,6 +103,7 @@ public:
     /**
      * Interface for durability.  Caller DOES NOT own pointer.
      */
+    // 持久化接口，调用者不持有指针
     RecoveryUnit* recoveryUnit() const {
         return _recoveryUnit.get();
     }
@@ -544,17 +555,18 @@ private:
     friend class WriteUnitOfWork;
     friend class repl::UnreplicatedWritesBlock;
 
-    Client* const _client;
+    Client* const _client; // 客户端
 
-    const OperationId _opId;
+    const OperationId _opId; // opid
     boost::optional<OperationKey> _opKey;
 
-    boost::optional<LogicalSessionId> _lsid;
-    boost::optional<TxnNumber> _txnNumber;
+    boost::optional<LogicalSessionId> _lsid; // sessionid
+    boost::optional<TxnNumber> _txnNumber; // 事务id
 
     std::unique_ptr<Locker> _locker;
 
     std::unique_ptr<RecoveryUnit> _recoveryUnit;
+    // 
     WriteUnitOfWork::RecoveryUnitState _ruState =
         WriteUnitOfWork::RecoveryUnitState::kNotInUnitOfWork;
 

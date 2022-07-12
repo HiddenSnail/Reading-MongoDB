@@ -45,6 +45,16 @@ class OperationContext;
  * the unit of work on the RecoveryUnit. If a low level WriteUnitOfWork aborts, any parents will
  * also abort.
  */
+
+/**
+结构：
+    RecoveryUnit
+        WriteUnitOfWork（只有顶层的才可以进行commit）
+            WriteUnitOfWork (子abort，则父也会abort)
+            WriteUnitOfWork
+            WriteUnitOfWork
+ */
+
 class WriteUnitOfWork {
     WriteUnitOfWork(const WriteUnitOfWork&) = delete;
     WriteUnitOfWork& operator=(const WriteUnitOfWork&) = delete;
@@ -100,7 +110,7 @@ private:
 
     OperationContext* _opCtx;
 
-    bool _toplevel;
+    bool _toplevel; // 是否是顶层WUOW
 
     bool _committed = false;
     bool _prepared = false;

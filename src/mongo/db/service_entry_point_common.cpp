@@ -1668,6 +1668,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
                                                   const Message& m,
                                                   const Hooks& behaviors) {
     // before we lock...
+    // Network定义：src/mongo/rpc/message.h
     NetworkOp op = m.operation();
     bool isCommand = false;
 

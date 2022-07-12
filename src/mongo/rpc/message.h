@@ -81,7 +81,8 @@ inline bool isSupportedRequestNetworkOp(NetworkOp op) {
     return false;
 }
 
-enum class LogicalOp {
+enum class 
+ {
     opInvalid,
     opUpdate,
     opInsert,
@@ -107,7 +108,7 @@ inline LogicalOp networkOpToLogicalOp(NetworkOp networkOp) {
             return LogicalOp::opDelete;
         case dbKillCursors:
             return LogicalOp::opKillCursors;
-        case dbMsg:
+        case dbMsg: // 映射为Command
             return LogicalOp::opCommand;
         case dbCompressed:
             return LogicalOp::opCompressed;

@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+// @Read
 
 #ifndef ASIO_DETAIL_IMPL_EPOLL_REACTOR_IPP
 #define ASIO_DETAIL_IMPL_EPOLL_REACTOR_IPP
@@ -149,7 +150,7 @@ void epoll_reactor::init_task()
 }
 
 
-// Note: 注册event到epoll上
+// Note: 注册socket到epoll上
 int epoll_reactor::register_descriptor(socket_type descriptor,
     epoll_reactor::per_descriptor_data& descriptor_data)
 {
@@ -169,6 +170,22 @@ int epoll_reactor::register_descriptor(socket_type descriptor,
       descriptor_data->try_speculative_[i] = true;
   }
 
+  /** Note:
+  struct epoll_event
+  {
+    uint32_t events;    // Epoll events, 必填
+    epoll_data_t data;  // User data variable
+  }
+
+  typedef union epoll_data
+  {
+    void *ptr;
+    int fd;
+    uint32_t u32;
+    uint64_t u64;
+  } epoll_data_t;
+  **/
+  
   epoll_event ev = { 0, { 0 } };
   // Note: 
   // EPOLLIN: 表示对应的文件描述符可以读
@@ -199,6 +216,7 @@ int epoll_reactor::register_descriptor(socket_type descriptor,
   return 0;
 }
 
+// Note: 对比register_descriptor函数，多携带了op_queue
 int epoll_reactor::register_internal_descriptor(
     int op_type, socket_type descriptor,
     epoll_reactor::per_descriptor_data& descriptor_data, reactor_op* op)
