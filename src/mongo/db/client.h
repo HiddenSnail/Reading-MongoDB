@@ -277,6 +277,7 @@ private:
     const ConnectionId _connectionId;
 
     // Protects the contents of the Client (such as changing the OperationContext, etc)
+    // Note: mongo/util/concurrency/spin_lock.h
     SpinLock _lock;
 
     // Whether this client is running as DBDirectClient

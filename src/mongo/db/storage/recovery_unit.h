@@ -111,7 +111,7 @@ public:
  * A RecoveryUnit is responsible for ensuring that data is persisted.
  * All on-disk information must be mutated through this interface.
  */
-class RecoveryUnit {
+// 持久化接口，不同的存储引擎需要继承并实现该接口，对应的有WiredTigerRecoveryUnit
     RecoveryUnit(const RecoveryUnit&) = delete;
     RecoveryUnit& operator=(const RecoveryUnit&) = delete;
 

@@ -96,6 +96,7 @@ public:
      * No subsequent operations are allowed except for commit or abort (when the object is
      * destructed).
      */
+    // 将WUOW转变为prepare状态
     void prepare();
 
     /**

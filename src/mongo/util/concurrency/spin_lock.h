@@ -26,6 +26,7 @@
  *    exception statement from all source files in the program, then also delete
  *    it in the license file.
  */
+ // @Read
 
 #pragma once
 
@@ -129,6 +130,7 @@ private:
     void _lockSlowPath();
 
     // Initializes to the cleared state.
+    // C++原子库变量：保证操作的原子性
     std::atomic_flag _locked = ATOMIC_FLAG_INIT;  // NOLINT
 };
 

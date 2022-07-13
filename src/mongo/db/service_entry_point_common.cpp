@@ -1674,6 +1674,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
 
     DbMessage dbmsg(m);
 
+    // Note: [重点] opCtx的组成，Client的组成
     Client& c = *opCtx->getClient();
 
     if (c.isInDirectClient()) {
@@ -1692,6 +1693,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
     const char* ns = dbmsg.messageShouldHaveNs() ? dbmsg.getns() : nullptr;
     const NamespaceString nsString = ns ? NamespaceString(ns) : NamespaceString();
 
+    // Note: dbQuery属于NetworkO枚举，在mongo/rpc/message.h中定义
     if (op == dbQuery) {
         if (nsString.isCommand()) {
             isCommand = true;

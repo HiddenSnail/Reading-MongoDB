@@ -41,7 +41,7 @@
 
 namespace mongo {
 
-
+// 自旋锁的实现
 void SpinLock::_lockSlowPath() {
     /**
      * this is designed to perform close to the default spin lock
@@ -52,15 +52,18 @@ void SpinLock::_lockSlowPath() {
      */
 
     for (int i = 0; i < 1000; i++) {
+        // 获取锁成功，则返回
         if (_tryLock())
             return;
-
+        //  _mm_pause() 提高程序自旋等待的循环性能，基本原理是
         MONGO_YIELD_CORE_FOR_SMT();
     }
 
     for (int i = 0; i < 1000; i++) {
         if (_tryLock())
             return;
+        // Note：使当前线程放弃CPU，把CPU让给另一个优先级等于或高于自己的线程，并处于就续状态。若没有这样的进程，则会立刻重新获取CPU，由就绪状态转变为运行状态
+        // 与sleep函数的区别是，sleep函数一旦调用，线程必定会休眠阻塞，并且唤醒后需要转变为就绪状态才能重新执行
         sched_yield();
     }
 

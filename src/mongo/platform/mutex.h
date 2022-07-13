@@ -301,6 +301,8 @@ inline auto defaultData() {
  * A stdx::unique_lock<Latch> cannot be constructed from a stdx::unique_lock<Mutex>. Sometimes,
  * standard types are not as powerful as we would like them to be.
  */
+
+// Note：锁的包装API，因为标准的锁类型无法满足开发团队需要
 class Latch {
 public:
     virtual ~Latch() = default;
@@ -348,6 +350,7 @@ private:
 
     const std::shared_ptr<Data> _data;
 
+    // 其实stdx::mutex是直接using std::mutex
     stdx::mutex _mutex;  // NOLINT
     bool _isLocked = false;
 };
