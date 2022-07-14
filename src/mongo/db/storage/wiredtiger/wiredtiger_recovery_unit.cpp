@@ -159,6 +159,7 @@ StorageStats& WiredTigerOperationStats::operator+=(const StorageStats& other) {
 WiredTigerRecoveryUnit::WiredTigerRecoveryUnit(WiredTigerSessionCache* sc)
     : WiredTigerRecoveryUnit(sc, sc->getKVEngine()->getOplogManager()) {}
 
+// Note: 携带oplogManager
 WiredTigerRecoveryUnit::WiredTigerRecoveryUnit(WiredTigerSessionCache* sc,
                                                WiredTigerOplogManager* oplogManager)
     : _sessionCache(sc), _oplogManager(oplogManager) {}
@@ -208,7 +209,9 @@ void WiredTigerRecoveryUnit::_abort() {
 }
 
 void WiredTigerRecoveryUnit::beginUnitOfWork(OperationContext* opCtx) {
+    // Note: 若当前state等于inactive或者active都可以
     invariant(!_inUnitOfWork(), toString(_getState()));
+    // Note: 当Unit
     invariant(!_isCommittingOrAborting(),
               str::stream() << "cannot begin unit of work while commit or rollback handlers are "
                                "running: "

@@ -112,6 +112,7 @@ public:
  * All on-disk information must be mutated through this interface.
  */
 // 持久化接口，不同的存储引擎需要继承并实现该接口，对应的有WiredTigerRecoveryUnit
+class RecoveryUnit {  
     RecoveryUnit(const RecoveryUnit&) = delete;
     RecoveryUnit& operator=(const RecoveryUnit&) = delete;
 
