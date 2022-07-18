@@ -26,6 +26,7 @@
  *    exception statement from all source files in the program, then also delete
  *    it in the license file.
  */
+// @Read
 
 #pragma once
 
@@ -47,6 +48,8 @@ namespace mongo {
 using CollectionUUID = UUID;
 class Database;
 
+// Note: Catalog 描述集合/索引元信息的类，我们将更改元信息的操作称为DDL(Data Definition Language)。实际上的Catalog类生成的对象，会被持久化为 一张表，表里的document即是对collections和indexes的描述。
+// 对应到mongodb数据目录下的_mdb_catalog文件
 class CollectionCatalog {
     CollectionCatalog(const CollectionCatalog&) = delete;
     CollectionCatalog& operator=(const CollectionCatalog&) = delete;

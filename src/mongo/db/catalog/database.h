@@ -42,6 +42,8 @@
 #include "mongo/db/repl/optime.h"
 #include "mongo/util/string_map.h"
 
+// @Read
+
 namespace mongo {
 
 class OperationContext;
@@ -49,8 +51,9 @@ class OperationContext;
 /**
  * Represents a logical database containing Collections.
  *
+ * const 数据库的语义是：可以改变下面的任何一个集合，但不能添加或删除它们
  * The semantics for a const Database are that you can mutate individual collections but not add or
- * remove them.
+ * remove them. 
  */
 class Database : public Decorable<Database> {
 public:

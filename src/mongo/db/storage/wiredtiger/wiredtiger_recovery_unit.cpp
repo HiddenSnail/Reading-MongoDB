@@ -189,6 +189,7 @@ void WiredTigerRecoveryUnit::_commit() {
         _sessionCache->notifyPreparedUnitOfWorkHasCommittedOrAborted();
     }
 
+    // Note: 真正进行提交的流程
     commitRegisteredChanges(commitTime);
     _setState(State::kInactive);
 }
@@ -208,10 +209,20 @@ void WiredTigerRecoveryUnit::_abort() {
     _setState(State::kInactive);
 }
 
+/**
+ *    enum class State {
+ *       kInactive,
+ *       kInactiveInUnitOfWork,
+ *       kActiveNotInUnitOfWork,
+ *       kActive,
+ *       kAborting,
+ *       kCommitting,
+ *    };
+ */
+
 void WiredTigerRecoveryUnit::beginUnitOfWork(OperationContext* opCtx) {
     // Note: 若当前state等于inactive或者active都可以
     invariant(!_inUnitOfWork(), toString(_getState()));
-    // Note: 当Unit
     invariant(!_isCommittingOrAborting(),
               str::stream() << "cannot begin unit of work while commit or rollback handlers are "
                                "running: "

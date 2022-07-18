@@ -48,6 +48,8 @@
 #include "mongo/stdx/thread.h"
 #include "mongo/util/fail_point.h"
 
+// @Read
+
 /**
  * Either executes the specified operation and returns it's value or randomly throws a write
  * conflict exception if the WTWriteConflictException failpoint is enabled. This is only checked
@@ -351,6 +353,7 @@ private:
     // The capped settings should not be updated once operations have started
     const bool _isCapped;
     // True if the storage engine is an in-memory storage engine
+    // Note: 内存数据库模式标记
     const bool _isEphemeral;
     // True if WiredTiger is logging updates to this table
     const bool _isLogged;

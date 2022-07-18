@@ -510,6 +510,7 @@ public:
      * The registerChange() method may only be called when a WriteUnitOfWork is active, and
      * may not be called during commit or rollback.
      */
+    // Note：该方法为将Change项添加至_changes数组后
     virtual void registerChange(std::unique_ptr<Change> change);
 
     /**
