@@ -278,6 +278,7 @@ private:
 
     // Protects the contents of the Client (such as changing the OperationContext, etc)
     // Note: mongo/util/concurrency/spin_lock.h
+    // Q: 为什么是作为一个成员变量使用，难道说同一个Client对象可以被多个线程获取？
     SpinLock _lock;
 
     // Whether this client is running as DBDirectClient

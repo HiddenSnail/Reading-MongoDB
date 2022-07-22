@@ -1704,6 +1704,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
 
     CurOp& currentOp = *CurOp::get(opCtx);
     {
+        // Note: lock_guard是实现访问临界资源的一种方式，Client内部存在一个_lock自旋锁成员，
         stdx::lock_guard<Client> lk(*opCtx->getClient());
         // Commands handling code will reset this if the operation is a command
         // which is logically a basic CRUD operation like query, insert, etc.
@@ -1713,28 +1714,36 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
 
     OpDebug& debug = currentOp.debug();
 
+    // Note: 该变量用于控制profile中是否需要输出
     boost::optional<long long> slowMsOverride;
     bool forceLog = false;
 
     DbResponse dbresponse;
+    // Command类型的
     if (op == dbMsg || (op == dbQuery && isCommand)) {
+        
+        // Note: 处理Command的入口
         dbresponse = receivedCommands(opCtx, m, behaviors);
         // IsMaster should take kMaxAwaitTimeMs at most, log if it takes twice that.
         if (auto command = currentOp.getCommand();
             command && (command->getName() == "ismaster" || command->getName() == "isMaster")) {
+            // SingleServerIsMasterMonitor::kMaxAwaitTime=10000ms
             slowMsOverride =
                 2 * durationCount<Milliseconds>(SingleServerIsMasterMonitor::kMaxAwaitTime);
         }
     } else if (op == dbQuery) {
         invariant(!isCommand);
         opCtx->markKillOnClientDisconnect();
-
+        // Note：处理Query的入口
         dbresponse = receivedQuery(opCtx, nsString, c, m, behaviors);
     } else if (op == dbGetMore) {
+        // Note：处理GetMore的入口
         dbresponse = receivedGetMore(opCtx, m, currentOp, &forceLog);
     } else {
         // The remaining operations do not return any response. They are fire-and-forget.
+        // 其余操作不返回响应
         try {
+            // Q: 此类操作如何通过客户端发出？
             if (op == dbKillCursors) {
                 currentOp.ensureStarted();
                 slowMsOverride = 10;
@@ -1758,10 +1767,13 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
                 if (!nsString.isValid()) {
                     uassert(16257, str::stream() << "Invalid ns [" << ns << "]", false);
                 } else if (op == dbInsert) {
+                    // Note: 插入
                     receivedInsert(opCtx, nsString, m);
                 } else if (op == dbUpdate) {
+                    // Note：更新
                     receivedUpdate(opCtx, nsString, m);
                 } else if (op == dbDelete) {
+                    // Note: 删除
                     receivedDelete(opCtx, nsString, m);
                 } else {
                     MONGO_UNREACHABLE;
@@ -1819,6 +1831,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
         }
     }
 
+    // Note: 指标汇总
     recordCurOpMetrics(opCtx);
     return dbresponse;
 }
