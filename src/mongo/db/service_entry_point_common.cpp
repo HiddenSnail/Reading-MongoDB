@@ -1743,7 +1743,7 @@ DbResponse ServiceEntryPointCommon::handleRequest(OperationContext* opCtx,
         // The remaining operations do not return any response. They are fire-and-forget.
         // 其余操作不返回响应
         try {
-            // Q: 此类操作如何通过客户端发出？
+            // Q: 此类操作如何通过客户端发出？会不会是killop？
             if (op == dbKillCursors) {
                 currentOp.ensureStarted();
                 slowMsOverride = 10;
