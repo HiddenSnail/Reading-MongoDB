@@ -1521,6 +1521,7 @@ void receivedKillCursors(OperationContext* opCtx, const Message& m) {
 }
 
 void receivedInsert(OperationContext* opCtx, const NamespaceString& nsString, const Message& m) {
+    // Note: 消息解析接口, 通过idl文件生成的h/cpp文件
     auto insertOp = InsertOp::parseLegacy(m);
     invariant(insertOp.getNamespace() == nsString);
 
@@ -1530,6 +1531,7 @@ void receivedInsert(OperationContext* opCtx, const NamespaceString& nsString, co
         audit::logInsertAuthzCheck(opCtx->getClient(), nsString, obj, status.code());
         uassertStatusOK(status);
     }
+    // @Note: 执行插入任务
     performInserts(opCtx, insertOp);
 }
 

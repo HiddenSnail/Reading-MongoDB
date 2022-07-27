@@ -87,7 +87,7 @@ public:
      * and cc() will return client.get(). The client will be destroyed when the thread exits
      * or the ThreadClient RAII helper exits its scope.
      */
-    static void setCurrent(ServiceContext::UniqueClient client);
+    static void setCuhttps://zh.cppreference.com/w/cpp/keyword/usingrrent(ServiceContext::UniqueClient client);
 
     /**
      * Releases the client being managed by the thread_local for this thread. After this call
@@ -263,6 +263,8 @@ public:
 private:
     friend class ServiceContext;
     friend class ThreadClient;
+
+    // 显示构造函数
     explicit Client(std::string desc,
                     ServiceContext* serviceContext,
                     transport::SessionHandle session);

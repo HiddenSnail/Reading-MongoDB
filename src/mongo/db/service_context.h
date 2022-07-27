@@ -145,6 +145,7 @@ using OperationKey = UUID;
  * A ServiceContext is the root of a hierarchy of contexts.  A ServiceContext owns
  * zero or more Clients, which in turn each own OperationContexts.
  */
+// 上下文层次结构的根，一个ServiceContext拥有多个Client，每个Client又各自拥有OperationContext
 class ServiceContext final : public Decorable<ServiceContext> {
     ServiceContext(const ServiceContext&) = delete;
     ServiceContext& operator=(const ServiceContext&) = delete;
@@ -193,6 +194,7 @@ public:
         virtual void onDestroyOperationContext(OperationContext* opCtx) = 0;
     };
 
+    // @维护了一个Clinet的集合
     using ClientSet = stdx::unordered_set<Client*>;
 
     /**
@@ -242,6 +244,7 @@ public:
     /**
      * This is the unique handle type for Clients created by a ServiceContext.
      */
+    // @Note: ClientDeleter是析构器类型。由于并不是简单的delele，因此需要为Clinet定义专门的析构器
     using UniqueClient = std::unique_ptr<Client, ClientDeleter>;
 
     /**

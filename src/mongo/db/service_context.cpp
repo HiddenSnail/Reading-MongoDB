@@ -177,6 +177,8 @@ ServiceContext::UniqueClient ServiceContext::makeClient(std::string desc,
     onCreate(client.get(), _clientObservers);
     {
         stdx::lock_guard<Latch> lk(_mutex);
+        // @Note: unordered_set 插入的结果为pair<iterator, bool>，其中的bool项：true表示插入成功，false表示插入失败
+        // invariant 关键字起到断言的效果
         invariant(_clients.insert(client.get()).second);
     }
     return UniqueClient(client.release());

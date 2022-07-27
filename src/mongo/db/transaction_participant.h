@@ -74,6 +74,9 @@ enum class TerminationCause {
  * This class maintains the state of a transaction running on a server session. It can only exist as
  * a decoration on the Session object and its state can only be modified by the thread which has the
  * session checked-out.
+ * @Note：
+ * 1. 保存正在运行的session上的事务的状态
+ * 2. 它的状态只能由拥有checked-out session的线程修改
  *
  * Its methods are split in two groups with distinct read/write and concurrency control rules. See
  * the comments below for more information.
@@ -157,6 +160,7 @@ class TransactionParticipant {
         boost::optional<SharedPromise<void>> _exitPreparePromise;
 
     private:
+        // @Note：判定transaction是状态转换
         static bool _isLegalTransition(StateFlag oldState, StateFlag newState);
 
         // Private because any modifications should go through transitionTo.

@@ -550,6 +550,7 @@ WriteResult performInserts(OperationContext* opCtx,
     invariant(!opCtx->lockState()->inAWriteUnitOfWork() ||
               (txnParticipant && opCtx->inMultiDocumentTransaction()));
     auto& curOp = *CurOp::get(opCtx);
+    // @Note: 代码块退出时用于执行资源回收的宏，当然也可以用于异常处理。但是需要保证执行的函数不再抛出异常
     ON_BLOCK_EXIT([&] {
         // This is the only part of finishCurOp we need to do for inserts because they reuse the
         // top-level curOp. The rest is handled by the top-level entrypoint.
@@ -565,6 +566,9 @@ WriteResult performInserts(OperationContext* opCtx,
     });
 
     {
+        // @Note: 在std::lock_guard对象构造时，传入的mutex对象(即它所管理的mutex对象)会被当前线程锁住，相当于Clinet对象会被当前线程锁住。
+        // 当不同的线程访问同一Client对象的该段代码时，mutex对象被该线程锁住，因此会转为挂起状态。也就保证了同一个Client对象上的数据，不会
+        // 被多个线程同时修改，产生数据不一致的风险
         stdx::lock_guard<Client> lk(*opCtx->getClient());
         curOp.setNS_inlock(wholeOp.getNamespace().ns());
         curOp.setLogicalOp_inlock(LogicalOp::opInsert);
