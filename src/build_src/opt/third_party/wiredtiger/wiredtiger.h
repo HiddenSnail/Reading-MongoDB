@@ -6,6 +6,8 @@
  * See the file LICENSE for redistribution information.
  */
 
+ //@Read: 包含WiredTiger错误码
+
 #ifndef	__WIREDTIGER_H_
 #define	__WIREDTIGER_H_
 

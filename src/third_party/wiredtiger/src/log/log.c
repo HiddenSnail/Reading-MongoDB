@@ -351,6 +351,7 @@ __wt_log_force_sync(WT_SESSION_IMPL *session, WT_LSN *min_lsn)
         __wt_verbose(session, WT_VERB_LOG, "log_force_sync: sync %s to LSN %" PRIu32 "/%" PRIu32,
           log_fh->name, min_lsn->l.file, min_lsn->l.offset);
         time_start = __wt_clock(session);
+        // @Note：journal调用__wt_fsync处
         WT_ERR(__wt_fsync(session, log_fh, true));
         time_stop = __wt_clock(session);
         fsync_duration_usecs = WT_CLOCKDIFF_US(time_stop, time_start);

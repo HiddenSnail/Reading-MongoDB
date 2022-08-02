@@ -50,6 +50,8 @@ namespace mongo {
  * It is guaranteed that the lock will be released when this object goes out of scope, therefore
  * the database reference returned by this class should not be retained.
  */
+
+// @Note: RAII(Resource Acquisition Is Initialisation)
 class AutoGetDb {
     AutoGetDb(const AutoGetDb&) = delete;
     AutoGetDb& operator=(const AutoGetDb&) = delete;

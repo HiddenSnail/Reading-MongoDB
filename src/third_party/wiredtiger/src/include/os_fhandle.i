@@ -16,6 +16,7 @@ WT_STAT_MSECS_HIST_INCR_FUNC(fswrite, perf_hist_fswrite_latency, 10)
  * __wt_fsync --
  *     POSIX fsync.
  */
+// @Note: __wt_fsync实现
 static inline int
 __wt_fsync(WT_SESSION_IMPL *session, WT_FH *fh, bool block)
 {
@@ -34,6 +35,7 @@ __wt_fsync(WT_SESSION_IMPL *session, WT_FH *fh, bool block)
     WT_STAT_CONN_INCR_ATOMIC(session, thread_fsync_active);
     WT_STAT_CONN_INCR(session, fsync_io);
     if (block)
+        // @Note: 实际调用 third_party/wiredtiger/src/os_posix/os_fs.c 的 __posix_sync
         ret = (handle->fh_sync == NULL ? 0 : handle->fh_sync(handle, (WT_SESSION *)session));
     else
         ret = (handle->fh_sync_nowait == NULL ? 0 : handle->fh_sync_nowait(

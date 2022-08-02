@@ -42,6 +42,8 @@
  *     difficulty of knowing what specific error will be returned under specific circumstances, we
  *     don't retry fsync-style calls and panic if a flush operation fails.
  */
+
+// @Note: __posix_sync实现。当fsync返回非0值时，mongodb的处理直接调用panic函数，终止系统。
 static int
 __posix_sync(WT_SESSION_IMPL *session, int fd, const char *name, const char *func)
 {
@@ -91,14 +93,21 @@ __posix_sync(WT_SESSION_IMPL *session, int fd, const char *name, const char *fun
         WT_RET_PANIC(session, ret, "%s: %s: fcntl(F_FULLFSYNC)", name, func);
     }
 #endif
+
+// @Note: 可以通过open(file, O_SYNC)方式，获得fdatasync/fsync的效果
+// O_SYNC: 以同步的方式调用write函数，即每次调用write都会先把文件数据和元数据刷到磁盘上再返回
+// O_DIRECT: 跳过内核缓冲区，直接进入IO队列。另外O_DIRECT并不能保证一定返回的时候落盘，因此有实时落盘的需求，需要配合O_SYNC使用
 #if defined(HAVE_FDATASYNC)
     /* See comment in __posix_sync(): sync cannot be retried or fail. */
+    // @Note: fdatasync不修改mtime，只需要有1次IO
     WT_SYSCALL(fdatasync(fd), ret);
     if (ret == 0)
         return (0);
+    // @Note：通过返回值，由WT自定义的panic处理函数处理，并未直接使用linux提供的系统调用
     WT_RET_PANIC(session, ret, "%s: %s: fdatasync", name, func);
 #else
     /* See comment in __posix_sync(): sync cannot be retried or fail. */
+    // @Note: fsync会修改mtime，需要2次IO。mtime保存在mata文件，实际数据保存在另一个文件
     WT_SYSCALL(fsync(fd), ret);
     if (ret == 0)
         return (0);

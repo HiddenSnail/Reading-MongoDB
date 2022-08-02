@@ -740,6 +740,7 @@ err:
  * __wt_btcur_insert --
  *     Insert a record into the tree.
  */
+// @Note: WT插入函数实现
 int
 __wt_btcur_insert(WT_CURSOR_BTREE *cbt)
 {

@@ -80,6 +80,7 @@ protected:
 private:
     bool _bypassDocumentValidation{false};
     bool _ordered{true};
+    // @Note: 用于唯一表示写操作的id，该字段与下面的_stmtIds是互斥的
     boost::optional<std::int32_t> _stmtId;
     boost::optional<std::vector<std::int32_t>> _stmtIds;
 };

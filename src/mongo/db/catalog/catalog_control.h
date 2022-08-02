@@ -32,6 +32,8 @@
 #include "mongo/db/operation_context.h"
 
 namespace mongo {
+// @Note: The catalog is where MongoDB stores information about the collections and indexes for a MongoDB node.
+// 存储collection和索引信息的地方
 namespace catalog {
 
 using MinVisibleTimestamp = Timestamp;

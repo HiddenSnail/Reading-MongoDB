@@ -488,6 +488,8 @@ Status CollectionImpl::insertDocuments(OperationContext* opCtx,
     const bool hasIdIndex = _indexCatalog->findIdIndex(opCtx);
 
     for (auto it = begin; it != end; it++) {
+        // Note: eoo函数表示，该元素是否是每个BSON对象的最后一个元素
+        // 该检查是看_id的索引在不在，且表上的_id字段在不在，
         if (hasIdIndex && it->doc["_id"].eoo()) {
             return Status(ErrorCodes::InternalError,
                           str::stream()
@@ -506,6 +508,8 @@ Status CollectionImpl::insertDocuments(OperationContext* opCtx,
     if (!status.isOK()) {
         return status;
     }
+
+    // @Note: 断言，里面的表达式必须是true，否则抛出异常
     invariant(sid == opCtx->recoveryUnit()->getSnapshotId());
 
     getGlobalServiceContext()->getOpObserver()->onInserts(
@@ -514,6 +518,7 @@ Status CollectionImpl::insertDocuments(OperationContext* opCtx,
     opCtx->recoveryUnit()->onCommit(
         [this](boost::optional<Timestamp>) { notifyCappedWaitersIfNeeded(); });
 
+    // @Note: executeIf(func, pred)，如果pred为true，则执行func
     hangAfterCollectionInserts.executeIf(
         [&](const BSONObj& data) {
             const auto& firstIdElem = data["first_id"];
@@ -608,6 +613,7 @@ Status CollectionImpl::_insertDocuments(OperationContext* opCtx,
                                         const std::vector<InsertStatement>::const_iterator begin,
                                         const std::vector<InsertStatement>::const_iterator end,
                                         OpDebug* opDebug) {
+    // @Note: 断言，ns已经上了共享互斥锁。需要找到在哪里上锁的？
     dassert(opCtx->lockState()->isCollectionLockedForMode(ns(), MODE_IX));
 
     const size_t count = std::distance(begin, end);
@@ -637,6 +643,8 @@ Status CollectionImpl::_insertDocuments(OperationContext* opCtx,
         records.emplace_back(Record{RecordId(), RecordData(it->doc.objdata(), it->doc.objsize())});
         timestamps.emplace_back(it->oplogSlot.getTimestamp());
     }
+    // @Note：插入数据
+    // mongo/db/storage/wiredtiger/wiredtiger_record_store.cpp
     Status status = _recordStore->insertRecords(opCtx, &records, timestamps);
     if (!status.isOK())
         return status;
@@ -654,6 +662,7 @@ Status CollectionImpl::_insertDocuments(OperationContext* opCtx,
     }
 
     int64_t keysInserted;
+    // @Note: 建立索引？
     status = _indexCatalog->indexRecords(opCtx, bsonRecords, &keysInserted);
     if (opDebug) {
         opDebug->additiveMetrics.incrementKeysInserted(keysInserted);

@@ -414,6 +414,8 @@ bool insertBatchAndHandleErrors(OperationContext* opCtx,
     }
 
     boost::optional<AutoGetCollection> collection;
+    
+    // @Note：尝试获取collection
     auto acquireCollection = [&] {
         while (true) {
             collection.emplace(
@@ -422,7 +424,7 @@ bool insertBatchAndHandleErrors(OperationContext* opCtx,
                 fixLockModeForSystemDotViewsChanges(wholeOp.getNamespace(), MODE_IX));
             if (collection->getCollection())
                 break;
-
+             // 获取不到collection则自动新建
             collection.reset();  // unlock.
             makeCollection(opCtx, wholeOp.getNamespace());
         }
@@ -435,6 +437,7 @@ bool insertBatchAndHandleErrors(OperationContext* opCtx,
     };
 
     auto txnParticipant = TransactionParticipant::get(opCtx);
+    // @Note: 多文档事务flag
     auto inTxn = txnParticipant && opCtx->inMultiDocumentTransaction();
     bool shouldProceedWithBatchInsert = true;
 
@@ -461,6 +464,7 @@ bool insertBatchAndHandleErrors(OperationContext* opCtx,
                 // First try doing it all together. If all goes well, this is all we need to do.
                 // See Collection::_insertDocuments for why we do all capped inserts one-at-a-time.
                 lastOpFixer->startingOp();
+                // @Note: 插入文档
                 insertDocuments(
                     opCtx, collection->getCollection(), batch.begin(), batch.end(), fromMigrate);
                 lastOpFixer->finishedOpSuccessfully();
@@ -491,12 +495,16 @@ bool insertBatchAndHandleErrors(OperationContext* opCtx,
             writeConflictRetry(opCtx, "insert", wholeOp.getNamespace().ns(), [&] {
                 try {
                     if (!collection)
-                        acquireCollection();
+                    acquireCollection();
+                    // 跨文档事务不允许运行在capped collections上
                     // Transactions are not allowed to operate on capped collections.
                     uassertStatusOK(
                         checkIfTransactionOnCappedColl(opCtx, collection->getCollection()));
                     lastOpFixer->startingOp();
+                    
+                    // @Note: 插入文档(Step1)
                     insertDocuments(opCtx, collection->getCollection(), it, it + 1, fromMigrate);
+                    
                     lastOpFixer->finishedOpSuccessfully();
                     SingleWriteResult result;
                     result.setN(1);
@@ -567,7 +575,7 @@ WriteResult performInserts(OperationContext* opCtx,
 
     {
         // @Note: 在std::lock_guard对象构造时，传入的mutex对象(即它所管理的mutex对象)会被当前线程锁住，相当于Clinet对象会被当前线程锁住。
-        // 当不同的线程访问同一Client对象的该段代码时，mutex对象被该线程锁住，因此会转为挂起状态。也就保证了同一个Client对象上的数据，不会
+        // 当不同的线程访问该段代码时，由于mutex对象被该线程锁住，因此会转为挂起状态。也就保证了同一个Client对象上的数据，不会
         // 被多个线程同时修改，产生数据不一致的风险
         stdx::lock_guard<Client> lk(*opCtx->getClient());
         curOp.setNS_inlock(wholeOp.getNamespace().ns());
@@ -590,6 +598,7 @@ WriteResult performInserts(OperationContext* opCtx,
 
     size_t stmtIdIndex = 0;
     size_t bytesInBatch = 0;
+    // @Note：存放插入操作的数据
     std::vector<InsertStatement> batch;
     const size_t maxBatchSize = internalInsertMaxBatchSize.load();
     const size_t maxBatchBytes = write_ops::insertVectorMaxBytes;
@@ -597,8 +606,10 @@ WriteResult performInserts(OperationContext* opCtx,
 
     for (auto&& doc : wholeOp.getDocuments()) {
         const bool isLastDoc = (&doc == &wholeOp.getDocuments().back());
+        // @Note: 校验doc是否符合规范
         auto fixedDoc = fixDocumentForInsert(opCtx->getServiceContext(), doc);
         if (!fixedDoc.isOK()) {
+
             // Handled after we insert anything in the batch to be sure we report errors in the
             // correct order. In an ordered insert, if one of the docs ahead of us fails, we should
             // behave as-if we never got to this document.
@@ -617,10 +628,13 @@ WriteResult performInserts(OperationContext* opCtx,
             BSONObj toInsert = fixedDoc.getValue().isEmpty() ? doc : std::move(fixedDoc.getValue());
             batch.emplace_back(stmtId, toInsert);
             bytesInBatch += batch.back().doc.objsize();
+
+            // @Note: 手动批处理
             if (!isLastDoc && batch.size() < maxBatchSize && bytesInBatch < maxBatchBytes)
                 continue;  // Add more to batch before inserting.
         }
 
+        // 插入
         bool canContinue =
             insertBatchAndHandleErrors(opCtx, wholeOp, batch, &lastOpFixer, &out, fromMigrate);
         batch.clear();  // We won't need the current batch any more.

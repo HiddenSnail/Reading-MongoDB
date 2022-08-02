@@ -63,6 +63,7 @@ public:
      * Must be called with some lock held on the database being looked up and the returned
      * pointer must not be stored.
      */
+    // 返回的指针不能存储
     static DatabaseShardingState* get(OperationContext* opCtx, const StringData dbName);
 
     /**
